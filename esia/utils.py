@@ -62,9 +62,8 @@ def smime_sign(certificate_file, private_key_file, data, backend='m2crypto'):
     """
     if backend == 'm2crypto' or backend is None:
         from M2Crypto import SMIME, BIO
-
         if not isinstance(data, bytes):
-            data = bytes(data)
+            data = bytes(data, 'utf-8')
 
         signer = SMIME.SMIME()
         signer.load_key(private_key_file, certificate_file)
@@ -84,15 +83,13 @@ def smime_sign(certificate_file, private_key_file, data, backend='m2crypto'):
         destination_path = destination_file.name
 
         cmd = (
-            'openssl smime -sign -md sha256 -in {f_in} -signer {cert} -inkey '
-            '{key} -out {f_out} -outform DER')
+            'openssl smime -sign -binary -outform DER -noattr -signer {cert} -inkey {key} -passin pass:1234567890 -out {f_out}')
         os.system(cmd.format(
             f_in=source_path,
             cert=certificate_file,
             key=private_key_file,
             f_out=destination_path,
         ))
-
         signed_message = open(destination_path, 'rb').read()
         os.unlink(source_path)
         os.unlink(destination_path)
