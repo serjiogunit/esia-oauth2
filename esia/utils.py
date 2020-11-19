@@ -83,7 +83,8 @@ def smime_sign(certificate_file, private_key_file, data, backend='m2crypto'):
         destination_path = destination_file.name
 
         cmd = (
-            'openssl smime -sign -binary -outform DER -noattr -signer {cert} -inkey {key} -out {f_out} -engine gost')
+            'openssl smime -sign -md sha256 -in {f_in} -signer {cert} -inkey '
+            '{key} -out {f_out} -outform DER -engine gost')
         os.system(cmd.format(
             f_in=source_path,
             cert=certificate_file,
