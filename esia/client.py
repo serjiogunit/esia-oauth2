@@ -27,7 +27,7 @@ class EsiaSettings(object):
             private_key_file, esia_service_url, esia_scope,
             crypto_backend='m2crypto', esia_token_check_key=None,
             logout_redirect_uri=None, csp_cert_thumbprint='',
-            csp_container_pwd='', ssl_verify=True):
+            csp_container_pwd='', ssl_verify=True, pem_phrase=None):
         """
         Класс настроек ЕСИА
         :param str esia_client_id: идентификатор клиента в ЕСИА
@@ -65,6 +65,7 @@ class EsiaSettings(object):
         self.csp_cert_thumbprint = csp_cert_thumbprint
         self.csp_container_pwd = csp_container_pwd
         self.ssl_verify = ssl_verify
+        self.pem_phrase = pem_phrase
 
         if self.crypto_backend == 'csp' and not self.csp_cert_thumbprint:
             raise CryptoBackendError(
@@ -97,7 +98,8 @@ class EsiaConfig(EsiaSettings):
                 'private_key_file': None,
                 'csp_cert_thumbprint': None,
                 'csp_container_pwd': None,
-                'ssl_verify': True
+                'ssl_verify': True,
+                'pem_phrase': conf.get('esia', 'PEM_PHRASE')
             }
 
             # Openssl, M2Crypto params

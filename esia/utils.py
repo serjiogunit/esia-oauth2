@@ -45,7 +45,7 @@ def make_request(url, method='GET', headers=None, data=None, verify=True):
         raise IncorrectJsonError(e)
 
 
-def smime_sign(certificate_file, private_key_file, data, backend='m2crypto'):
+def smime_sign(certificate_file, private_key_file, data, backend='m2crypto', pem_phrase=None):
     """
     Подписывает данные в формате SMIME с использование sha256.
     В качестве бэкенда используется либо вызов openssl, либо
@@ -82,15 +82,28 @@ def smime_sign(certificate_file, private_key_file, data, backend='m2crypto'):
         destination_file.close()
         destination_path = destination_file.name
 
-        cmd = (
-            'openssl smime -sign -md sha256 -in {f_in} -signer {cert} -inkey '
-            '{key} -out {f_out} -outform DER -engine gost')
-        os.system(cmd.format(
-            f_in=source_path,
-            cert=certificate_file,
-            key=private_key_file,
-            f_out=destination_path,
-        ))
+        if pem_phrase:
+            cmd = (
+                'openssl smime -sign -md sha256 -in {f_in} -signer {cert} -inkey '
+                '{key} -out {f_out} -outform DER -engine gost -passin pass:{pem_phrase}')
+            os.system(cmd.format(
+                f_in=source_path,
+                cert=certificate_file,
+                key=private_key_file,
+                f_out=destination_path,
+                pem_phrase=pem_phrase
+            ))
+        else:
+            cmd = (
+                'openssl smime -sign -md sha256 -in {f_in} -signer {cert} -inkey '
+                '{key} -out {f_out} -outform DER -engine gost')
+            os.system(cmd.format(
+                f_in=source_path,
+                cert=certificate_file,
+                key=private_key_file,
+                f_out=destination_path,
+            ))
+
         signed_message = open(destination_path, 'rb').read()
         os.unlink(source_path)
         os.unlink(destination_path)
@@ -156,7 +169,7 @@ def sign_params(params, settings, backend='csp'):
     else:
         raw_client_secret = smime_sign(
             settings.certificate_file, settings.private_key_file,
-            plaintext, backend)
+            plaintext, backend, settings.pem_phrase)
     params.update(
         client_secret=base64.urlsafe_b64encode(
             raw_client_secret).decode('utf-8'),
